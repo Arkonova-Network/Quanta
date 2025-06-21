@@ -1,4 +1,4 @@
-import { decryptWithSymmetricKey } from "/js/CryptoUtil.js";
+import { decryptWithSymmetricKey } from "/gh/Arkonova-Network/Quanta/js/CryptoUtil.js";
 const noMessages = document.getElementById('noMessages');
 function escapeHTML(str) {
   return str
