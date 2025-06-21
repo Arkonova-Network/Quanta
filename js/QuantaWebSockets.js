@@ -1,4 +1,4 @@
-import {encryptWithSymmetricKey, generateAndSendKeys, restoreSymmetricKey} from "/js/CryptoUtil.js"
+import {encryptWithSymmetricKey, generateAndSendKeys, restoreSymmetricKey} from "/gh/Arkonova-Network/Quanta/js/CryptoUtil.js"
 const chatBody = document.getElementById('chatBody');
 const messageInput = document.getElementById('messageInput');
 
