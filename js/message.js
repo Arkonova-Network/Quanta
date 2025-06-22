@@ -36,10 +36,4 @@ export function toggleNoMessages(noMessages) {
         noMessages.style.display = 'none';
         }
     }
-function toggleNoMessages(noMessages) {
-    if (chatBody.children.length === 0) {
-        noMessages.style.display = 'block';
-    } else {
-        noMessages.style.display = 'none';
-        }
-    }
+
