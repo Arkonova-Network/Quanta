@@ -27,6 +27,8 @@
             };
           chatDiv.setAttribute('data-type', chat.type);
             let chatName = chat.name || '';
+          chatDiv.setAttribute('Key', chat.Key);
+            let chatName = chat.name || '';
   
 const avatar = document.createElement('div');
 avatar.className = 'avatar rounded-circle bg-secondary text-white d-flex justify-content-center align-items-center me-2';
