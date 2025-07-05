@@ -1,4 +1,5 @@
-  document.addEventListener('DOMContentLoaded', function() {
+import { goToChat  } from '/gh/Arkonova-Network/Quanta/js/QuantaHub.js';
+document.addEventListener('DOMContentLoaded', function() {
             console.log("connecting to server");
       const socket = io({
   maxHttpBufferSize: 10 * 1024 * 1024
@@ -22,9 +23,9 @@
             const chatDiv = document.createElement('div');
             chatDiv.className = 'card p-2 d-flex flex-row align-items-center cursor-pointer user-button';
             chatDiv.style.cursor = 'pointer';
-            chatDiv.onclick = () => {
-              window.location.href = `/m/u/${chat.id}`;
-            };
+chatDiv.onclick = () => {
+  goToChat(chat.id, chat.Key, chat.avatar, chat.flame, chat.name, chat.userid);
+};
           chatDiv.setAttribute('data-type', chat.type);
           chatDiv.setAttribute('Key', chat.Key);
             let chatName = chat.name || '';
