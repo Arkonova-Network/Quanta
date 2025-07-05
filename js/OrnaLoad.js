@@ -1,127 +1,96 @@
-(function () {
-  // === Variables ===
-  const socket = io({ maxHttpBufferSize: 10 * 1024 * 1024 });
+const socket = io({ maxHttpBufferSize: 10 * 1024 * 1024 });
 
-  const badgeContainer = document.getElementById('badges-container');
-  const externalBadgeContainer = document.getElementById('external-badges');
-  const externalUserId = externalBadgeContainer?.getAttribute('name');
+const userBadgeContainer = document.getElementById('badges-container-user');
+const externalBadgeContainer = document.getElementById('external-badges');
+const externalFrameContainer = document.getElementById('external-frames');
 
-  const frameContainer = document.getElementById('external-frames');
-  const frameUserId = frameContainer?.getAttribute('useridflame');
+let externalUserId = null, frameUserId = null;
 
-  // === Helper Functions ===
-  function createLoadingBlock(className, idAttr, idValue, userId = null) {
-    const div = document.createElement('div');
-    div.className = className;
-    div.dataset[idAttr] = idValue;
-    if (userId) div.dataset.userId = userId;
-    div.textContent = 'Loading...';
-    return div;
-  }
+function createLoadingBlock(className, dataAttrName, dataAttrValue, userId = null) {
+  const div = document.createElement('div');
+  div.className = className;
+  div.dataset[dataAttrName] = dataAttrValue;
+  if (userId) div.dataset.userId = userId;
+  div.textContent = 'Loading...';
+  return div;
+}
 
-  function updateBlockWithImage(selector, imageUrl, title, className, dataIdAttr, dataId) {
-    const block = document.querySelector(selector);
-    if (!block) return;
-    block.innerHTML = `
-      <img src="${imageUrl}" 
-           class="img-thumbnail ${className}" 
-           style="width: auto; height: 200px; cursor: pointer; user-select: none;" 
-           ${dataIdAttr ? `data-${dataIdAttr}="${dataId}"` : ''}
-           title="${title}" 
-           loading="lazy">
-    `;
-  }
+function updateBlockWithImage(selector, imageUrl, title, className, dataAttrName = null, dataAttrValue = null) {
+  const block = document.querySelector(selector);
+  if (!block) return console.warn(`Block not found for selector: ${selector}`);
+  block.innerHTML = `<img src="${imageUrl}" class="img-thumbnail ${className}" style="width:auto;height:200px;cursor:pointer;user-select:none;" ${dataAttrName ? `data-${dataAttrName}="${dataAttrValue}"` : ''} title="${title}" loading="lazy">`;
+  console.debug(`Rendered image for selector: ${selector}, title: ${title}`);
+}
 
-  // === Events for Current User's Badges ===
+export async function loadUserBadges() {
   socket.emit('get_badge_list');
+  console.debug('Emitted: get_badge_list');
 
-  socket.on('badge_list', function (data) {
-    if (data.error) return console.error(data.error);
-
-    badgeContainer.innerHTML = '';
+  socket.on('badge_list', (data) => {
+    if (data.error) return console.error('Error in badge_list:', data.error);
+    console.debug('Received badge_list:', data);
+    userBadgeContainer.innerHTML = '';
     data.badges.forEach(badge => {
-      const div = createLoadingBlock('badge-block', 'badgeId', badge.id);
-      badgeContainer.appendChild(div);
+      userBadgeContainer.appendChild(createLoadingBlock('badge-block', 'badgeId', badge.id));
       socket.emit('get_badge_details', { id: badge.id });
+      console.debug('Emitted: get_badge_details', badge.id);
     });
   });
 
-  socket.on('badge_details', function (data) {
-    if (data.error) return console.error(data.error);
-
-    updateBlockWithImage(
-      `div.badge-block[data-badge-id='${data.id}']`,
-      data.image_url,
-      `Select badge ${data.id}`,
-      'badge-select',
-      null,
-      null
-    );
+  socket.on('badge_details', (data) => {
+    if (data.error) return console.error('Error in badge_details:', data.error);
+    console.debug('Received badge_details:', data);
+    updateBlockWithImage(`div.badge-block[data-badge-id='${data.id}']`, data.image_url, `Select badge ${data.id}`, 'badge-select');
   });
+}
 
-  // === External Badges for Another User ===
+export async function loadOrna(userId) {
+  externalUserId = frameUserId = userId;
+  console.debug('Loading external user data for:', userId);
+
   if (externalUserId) {
     socket.emit('get_badge_list_external', { user_id: externalUserId });
+    console.debug('Emitted: get_badge_list_external', externalUserId);
   }
 
-  socket.on('badge_list_external', function (data) {
-    if (data.error) return console.error(data.error);
-
+  socket.on('badge_list_external', (data) => {
+    if (data.error) return console.error('Error in badge_list_external:', data.error);
+    console.debug('Received badge_list_external:', data);
     externalBadgeContainer.innerHTML = '';
     data.badges.forEach(badge => {
-      const div = createLoadingBlock('badge-block', 'badgeId', badge.id, data.user_id);
-      externalBadgeContainer.appendChild(div);
-      socket.emit('get_badge_details_external', {
-        id: badge.id,
-        user_id: data.user_id
-      });
+      externalBadgeContainer.appendChild(createLoadingBlock('badge-block', 'badgeId', badge.id, data.user_id));
+      socket.emit('get_badge_details_external', { id: badge.id, user_id: data.user_id });
+      console.debug('Emitted: get_badge_details_external', badge.id, data.user_id);
     });
   });
 
-  socket.on('badge_details_external', function (data) {
-    if (data.error) return console.error(data.error);
-
-    updateBlockWithImage(
-      `div.badge-block[data-badge-id='${data.id}'][data-user-id='${data.user_id}']`,
-      data.image_url,
-      `Badge ${data.id}`,
-      'badge-select',
-      null,
-      null
-    );
+  socket.on('badge_details_external', (data) => {
+    if (data.error) return console.error('Error in badge_details_external:', data.error);
+    console.debug('Received badge_details_external:', data);
+    updateBlockWithImage(`div.badge-block[data-badge-id='${data.id}'][data-user-id='${data.user_id}']`, data.image_url, `Badge ${data.id}`, 'badge-select');
   });
 
-  // === External Frames for Another User ===
   if (frameUserId) {
     socket.emit('get_frame_list_external', { user_id: frameUserId });
+    console.debug('Emitted: get_frame_list_external', frameUserId);
   }
 
-  socket.on('frame_list_external', function (data) {
-    if (data.error) return console.error(data.error);
-
-    frameContainer.innerHTML = '';
+  socket.on('frame_list_external', (data) => {
+    if (data.error) return console.error('Error in frame_list_external:', data.error);
+    console.debug('Received frame_list_external:', data);
+    externalFrameContainer.innerHTML = '';
     data.frames.forEach(frame => {
-      const div = createLoadingBlock('frame-block', 'frameId', frame.id, data.user_id);
-      div.textContent = 'Loading frame...';
-      frameContainer.appendChild(div);
-      socket.emit('get_frame_details_external', {
-        id: frame.id,
-        user_id: data.user_id
-      });
+      const frameBlock = createLoadingBlock('frame-block', 'frameId', frame.id, data.user_id);
+      frameBlock.textContent = 'Loading frame...';
+      externalFrameContainer.appendChild(frameBlock);
+      socket.emit('get_frame_details_external', { id: frame.id, user_id: data.user_id });
+      console.debug('Emitted: get_frame_details_external', frame.id, data.user_id);
     });
   });
 
-  socket.on('frame_details_external', function (data) {
-    if (data.error) return console.error(data.error);
-
-    updateBlockWithImage(
-      `div.frame-block[data-frame-id='${data.id}'][data-user-id='${data.user_id}']`,
-      data.image_url,
-      `Select frame ${data.name}`,
-      'frame-select',
-      'frame-id',
-      data.id
-    );
+  socket.on('frame_details_external', (data) => {
+    if (data.error) return console.error('Error in frame_details_external:', data.error);
+    console.debug('Received frame_details_external:', data);
+    updateBlockWithImage(`div.frame-block[data-frame-id='${data.id}'][data-user-id='${data.user_id}']`, data.image_url, `Select frame ${data.name}`, 'frame-select', 'frame-id', data.id);
   });
-
-})();
+}
