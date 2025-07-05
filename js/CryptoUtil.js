@@ -94,33 +94,73 @@ export async function decryptWithSymmetricKey(symmetricKeyString, encryptedBase6
     const decrypted = await crypto.subtle.decrypt({name: "AES-GCM",iv: iv},keyMaterial,encryptedData);
     return dec.decode(decrypted);
 }
-export async function DecryptSymmetricKey() {
+export async function DecryptSymmetricKey(chatId) {
     try {
         const element = document.querySelector('[status]');
-        const encryptedBase64 = element?.getAttribute('status');
-        if (!encryptedBase64 || encryptedBase64 === "None") {
-            console.log("SymmetricKey restor");
-            return;
+        if (!element) {
+            throw new Error("Could not find an element with a 'status' attribute.");
         }
 
-        const encryptedArrayBuffer = Uint8Array.from(atob(encryptedBase64),c => c.charCodeAt(0));
+        const encryptedBase64 = element.getAttribute('status');
+        if (!encryptedBase64 || encryptedBase64 === "None") {
+            console.log("No encrypted key found. Possibly already restored.");
+            return;
+        }
+        let encryptedArrayBuffer;
+        try {
+            encryptedArrayBuffer = Uint8Array.from(atob(encryptedBase64), c => c.charCodeAt(0));
+        } catch (convErr) {
+            throw new Error("Failed to convert encrypted key from base64 to binary.");
+        }
         const privKeyJwkRaw = await getFromIndexedDB("privJwk");
-        const privKeyJwk = typeof privKeyJwkRaw === 'string' ? JSON.parse(privKeyJwkRaw) : privKeyJwkRaw;
-        const privateKey = await importPrivateKey(privKeyJwk);
-        const decryptedBuffer = await crypto.subtle.decrypt({ name: "RSA-OAEP" },privateKey,encryptedArrayBuffer);
+        if (!privKeyJwkRaw) {
+            throw new Error("Private key not found in storage.");
+        }
+        let privKeyJwk;
+        try {
+            privKeyJwk = typeof privKeyJwkRaw === 'string' ? JSON.parse(privKeyJwkRaw) : privKeyJwkRaw;
+        } catch (parseErr) {
+            throw new Error("Failed to parse the private key (JWK).");
+        }
+        let privateKey;
+        try {
+            privateKey = await importPrivateKey(privKeyJwk);
+        } catch (importErr) {
+            throw new Error("Failed to import the private key.");
+        }
+        let decryptedBuffer;
+        try {
+            decryptedBuffer = await crypto.subtle.decrypt(
+                { name: "RSA-OAEP" },
+                privateKey,
+                encryptedArrayBuffer
+            );
+        } catch (decryptErr) {
+            throw new Error("Decryption failed. Possibly wrong key or corrupt data.");
+        }
+
         const decoder = new TextDecoder();
         const decryptedText = decoder.decode(decryptedBuffer);
-        const arrayBufferToBase64 = buffer => btoa(String.fromCharCode(...new Uint8Array(buffer)));
-        const decryptedBase64 = arrayBufferToBase64(decryptedBuffer);
-        const chatId = element.getAttribute('uuid');
-        if (!chatId) {throw new Error("No chatId in DOM");}
+
+        const base64FromArrayBuffer = buffer => 
+            btoa(String.fromCharCode(...new Uint8Array(buffer)));
+        const decryptedBase64 = base64FromArrayBuffer(decryptedBuffer);
+
+        if (!chatId) {
+            throw new Error("Missing chatId parameter. Cannot store the decrypted key.");
+        }
 
         localStorage.setItem(chatId, decryptedBase64);
+        console.log(`Symmetric key decrypted and saved for chatId: ${chatId}`);
+
     } catch (err) {
-        console.error('Error decryptSymmetricKey:', err.message || err);
-        showNotification?.(`Error decryptSymmetricKey: ${err.message || err}`, 'error');
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("DecryptSymmetricKey error:", message);
+        showNotification?.(`Decryption error: ${message}`, 'error');
     }
 }
+
+
 async function getFromIndexedDB(keyName) {
     const db = await openDatabase();
     return new Promise((resolve, reject) => {
