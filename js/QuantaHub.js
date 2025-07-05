@@ -1,4 +1,4 @@
-// QuantaInit version 0.0.5
+// QuantaHub version 0.0.5
 console.log("QuantaInit version 0.0.5");
 
 import { DecryptSymmetricKey, decryptWithSymmetricKey } from "/gh/Arkonova-Network/Quanta/js/CryptoUtil.js";
