@@ -1,8 +1,7 @@
 (function(){
   const chatBody = document.getElementById('chatBody');
   if (!chatBody) return;
-  const sitePreviewCache = new Map(); // Кэш по URL
-
+  const sitePreviewCache = new Map();
   const imageExtensions = ['.png', '.jpg', '.jpeg', '.gif', '.webp', '.bmp', '.svg'];
   const urlRegex = /(https?:\/\/[^\s]+)/g;
 const textFileExtensions = ['.txt', '.json', '.md', '.csv', '.log', '.xml'];
@@ -24,10 +23,6 @@ const knownFileExtensions = {
   '.tar': 'file-earmark-zip',
   '.gz': 'file-earmark-zip'
 };
-
-
-
-
 function downloadFile(url) {
   const normalizedUrl = normalizeUrlForRawAccess(url);
   return fetch(normalizedUrl)
@@ -66,20 +61,12 @@ function isVideoUrl(url) {
          vimeoRegex.test(normalizedUrl) || 
          videoExtensions.some(ext => normalizedUrl.toLowerCase().includes(ext));
 }
-
-
-
-
 function isFileUrl(url) {
   const normalizedUrl = normalizeUrlForRawAccess(url);
   return Object.keys(knownFileExtensions).some(ext => normalizedUrl.toLowerCase().endsWith(ext));
 }
-
-
 function createVideoPreviewElement(url) {
   let embedUrl = url;
-
-  // YouTube
   if (url.includes('youtube.com/watch?v=')) {
     const videoId = url.split('v=')[1].split('&')[0];
     embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}`;
@@ -87,7 +74,6 @@ function createVideoPreviewElement(url) {
     const videoId = url.split('youtu.be/')[1].split('?')[0];
     embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}`;
   }
-  // Vimeo
   else if (url.includes('vimeo.com/')) {
     const videoId = url.split('vimeo.com/')[1].split('?')[0];
     embedUrl = `https://player.vimeo.com/video/${videoId}`;
@@ -348,17 +334,14 @@ if (isImageUrl(url)) {
   }
 
 
+//site
 function createSitePreviewBlock(url) {
   if (sitePreviewCache.has(url)) {
-    return sitePreviewCache.get(url); // Уже есть — возвращаем
+    return sitePreviewCache.get(url);
   }
 
   const container = document.createElement('div');
-
-  // Сохраняем контейнер в кэше сразу, чтобы не допустить повторных вызовов
   sitePreviewCache.set(url, container);
-
-  // Стили для тёмной темы
   container.className = 'alert alert-secondary d-flex flex-wrap flex-md-nowrap align-items-center gap-2 p-2 my-2';
   container.style.fontSize = 'clamp(0.9rem, 2vw, 1rem)';
   container.style.backgroundColor = '#2a3a4b';
@@ -368,24 +351,50 @@ function createSitePreviewBlock(url) {
   container.innerHTML = `<div class="spinner-border spinner-border-sm" role="status"></div> <span>Загрузка...</span>`;
 
   async function getSiteMetaData(inputUrl) {
-    const corsProxy = 'https://api.allorigins.win/raw?url=';
     let siteUrl = inputUrl;
 
-    async function fetchHTML(targetUrl) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000); // 10 секунд
+const proxyList = [
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?', // работает с URL без кодировки
+];
 
-      try {
-        const response = await fetch(corsProxy + encodeURIComponent(targetUrl), {
-          signal: controller.signal
-        });
-        clearTimeout(timeout);
-        if (!response.ok) throw new Error('Request failed');
-        return await response.text();
-      } catch (err) {
-        return null;
+async function fetchHTML(targetUrl) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000); // 15 секунд
+
+  for (const proxy of proxyList) {
+    try {
+      const encodedUrl = proxy.includes('?url=') ? encodeURIComponent(targetUrl) : targetUrl;
+      const response = await fetch(proxy + encodedUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', // некоторые сайты требуют
+        }
+      });
+
+      clearTimeout(timeout);
+
+      if (!response.ok) {
+        console.warn(`Прокси ${proxy} вернул статус ${response.status}`);
+        continue;
       }
+
+      const html = await response.text();
+      if (html.length < 50) {
+        console.warn(`Получен подозрительно короткий HTML с ${proxy}`);
+        continue;
+      }
+
+      return html;
+
+    } catch (err) {
+      console.warn(`Ошибка при попытке через ${proxy}:`, err.message);
+      continue;
     }
+  }
+
+  return null;
+}
 
     function extractMetadata(html, baseURL) {
       const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -461,7 +470,8 @@ function createSitePreviewBlock(url) {
       let domainText = '';
       try {
         const domain = new URL(url).origin;
-        domainText = `<a href="${domain}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">${domain}</a>`;
+        const parsedDomain = new URL(url).hostname;
+        domainText = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">${parsedDomain}</a>`;
       } catch {
         domainText = url;
       }
@@ -470,6 +480,9 @@ function createSitePreviewBlock(url) {
 	container.setAttribute('type', 'site');
   return container;
 }
+
+// 
+
 
 
 
