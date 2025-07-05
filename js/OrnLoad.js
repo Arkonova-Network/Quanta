@@ -63,7 +63,9 @@ export function initSocketHandlers() {
       `div.badge-block[data-badge-id='${data.id}']`,
       data.image_url,
       `Badge ${data.id}`,
-      'badge-select'
+      'badge-select',
+      'badge-id',
+      data.id
     );
   });
 
