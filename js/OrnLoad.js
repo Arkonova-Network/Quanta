@@ -1,7 +1,7 @@
 const VERSION = '0.0.2';
 console.info(`Orna badge/frame loader version: ${VERSION}`);
 
-const socket = io({ maxHttpBufferSize: 10 * 1024 * 1024 });
+const socket = io({ maxHttpBufferSize: 10 * 1024 * 1024, transports: ['websocket'] });
 
 const userBadgeContainer = document.getElementById('badges-container-user');
 const externalBadgeContainer = document.getElementById('external-badges');
