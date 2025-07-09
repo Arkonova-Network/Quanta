@@ -1,4 +1,4 @@
-const VERSION = '0.0.2';
+const VERSION = '0.0.4';
 console.info(`Orna badge/frame loader version: ${VERSION}`);
 
 const socket = io({ maxHttpBufferSize: 10 * 1024 * 1024, transports: ['websocket'] });
@@ -134,3 +134,57 @@ export function loadOrna(userId) {
   socket.emit('get_frame_list_external', { user_id: userId });
 }
 initSocketHandlers()
+
+let lastBadgeIds = [];
+let lastExternalBadgeIds = {};
+let lastExternalFrameIds = {};
+function isChanged(prevIds, newIds) {
+  return JSON.stringify(prevIds) !== JSON.stringify(newIds);
+}
+setInterval(() => {
+  socket.emit('get_badge_list');
+}, 5000); 
+socket.on('badge_list', (data) => {
+  if (data.error) return console.error('Error in badge_list:', data.error);
+
+  const newBadgeIds = data.badges.map(b => b.id);
+  if (!isChanged(lastBadgeIds, newBadgeIds)) return;
+  lastBadgeIds = newBadgeIds;
+
+  userBadgeContainer.innerHTML = '';
+  newBadgeIds.forEach(id => {
+    userBadgeContainer.appendChild(createLoadingBlock('badge-block', 'badgeId', id));
+    socket.emit('get_badge_details', { id });
+  });
+});
+
+socket.on('badge_list_external', (data) => {
+  if (data.error) return console.error('Error in badge_list_external:', data.error);
+  const newBadgeIds = data.badges.map(b => b.id);
+  const uid = data.user_id;
+  if (!isChanged(lastExternalBadgeIds[uid] || [], newBadgeIds)) return;
+  lastExternalBadgeIds[uid] = newBadgeIds;
+
+  externalBadgeContainer.innerHTML = '';
+  newBadgeIds.forEach(id => {
+    externalBadgeContainer.appendChild(createLoadingBlock('badge-block', 'badgeId', id, uid));
+    socket.emit('get_badge_details_external', { id, user_id: uid });
+  });
+});
+
+socket.on('frame_list_external', (data) => {
+  if (data.error) return console.error('Error in frame_list_external:', data.error);
+  const newFrameIds = data.frames.map(f => f.id);
+  const uid = data.user_id;
+  if (!isChanged(lastExternalFrameIds[uid] || [], newFrameIds)) return;
+  lastExternalFrameIds[uid] = newFrameIds;
+
+  externalFrameContainer.innerHTML = '';
+  data.frames.forEach(frame => {
+    const block = createLoadingBlock('frame-block', 'frameId', frame.id, uid);
+    block.textContent = 'Loading frame...';
+    externalFrameContainer.appendChild(block);
+    socket.emit('get_frame_details_external', { id: frame.id, user_id: uid });
+  });
+});
+
