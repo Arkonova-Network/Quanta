@@ -6,7 +6,7 @@ import { sendMessage, joinPrivateChat } from "/gh/Arkonova-Network/Quanta/js/Qua
 import { appendMessage, toggleNoMessages } from "/gh/Arkonova-Network/Quanta/js/message.js";
 import {loadOrna, loadUserBadges} from "/gh/Arkonova-Network/Quanta/js/OrnLoad.js";
 const socket = io();
-
+const receivedMessageIds = new Set();
 const meid = document.documentElement.getAttribute('me');
 const noMessages = document.getElementById('noMessages');
 const messageInput = document.getElementById('messageInput');
@@ -91,13 +91,22 @@ socket.on('private:messages', async (messages) => {
 
 
 socket.on('private:receive_message', async (message) => {
+    if (receivedMessageIds.has(message.id)) {
+        console.log('Duplicate message ignored:', message.id);
+        return; 
+    }
+
+    receivedMessageIds.add(message.id);
+
     if (document.hidden) {
         const decryptedText = await decryptWithSymmetricKey(localStorage.getItem(chatId), message.content);
         showBrowserNotification(`Message from ${message.sender_id}`, decryptedText);
     }
+
     console.log("Appending message");
     await appendMessage(message, chatBody, chatId, meid);
 });
+
 
 socket.on('error', (data) => {
     console.error('Socket error:', data.msg);
