@@ -18,6 +18,6 @@ export async function getFromIndexedDB(keyName) {
         const store = transaction.objectStore("keysStore");
         const request = store.get(keyName);
         request.onsuccess = function(event) {resolve(event.target.result);};
-        request.onerror = function() {reject("Ошибка чтения из IndexedDB");};
+        request.onerror = function() {reject("Error reading fromIndexedDB");};
     });
 }
