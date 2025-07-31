@@ -82,14 +82,13 @@ function createVideoPreviewElement(url) {
   const iframe = document.createElement('iframe');
   iframe.src = embedUrl;
   iframe.className = 'my-2';
-  iframe.style.width = '100%'; // адаптивная ширина
-  iframe.style.aspectRatio = '16 / 9'; // сохраняем пропорции
-  iframe.style.maxWidth = '800px'; // ограничение для десктопа
+  iframe.style.width = '100%'; 
+  iframe.style.aspectRatio = '16 / 9'; 
+  iframe.style.maxWidth = '800px'; 
   iframe.style.border = 'none';
   iframe.style.borderRadius = '1rem';
   iframe.style.display = 'block';
-  iframe.style.margin = '0 auto'; // центрирование
-
+  iframe.style.margin = '0 auto'; 
   iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
   iframe.allowFullscreen = true;
 	
@@ -176,7 +175,7 @@ container.style.gap = '10px';
 container.style.backgroundColor = '#2a3a4b';
 container.style.color = '#fff';
 container.style.fontSize = 'clamp(0.85rem, 2vw, 1rem)';
-container.style.flexDirection = 'row'; // fallback
+container.style.flexDirection = 'row'; 
 
   const icon = document.createElement('i');
   icon.className = `bi bi-${iconClass}`;
@@ -189,7 +188,7 @@ container.style.flexDirection = 'row'; // fallback
     <span class="text-muted" id="fileSize-${fileName.replace(/\W/g, '')}" style="display: contents;">Получение размера...</span>
   `;
 	info.style.flex = '1 1 auto';
-info.style.minWidth = '0'; // предотвращает переполнение
+info.style.minWidth = '0'; 
 info.querySelector('small').style.fontSize = '0.8rem';
   const actions = document.createElement('div');
   actions.className = 'ms-auto d-flex align-items-center gap-2';
@@ -220,8 +219,6 @@ info.querySelector('small').style.fontSize = '0.8rem';
   container.appendChild(icon);
   container.appendChild(info);
   container.appendChild(actions);
-
-  // Получить размер файла (через HEAD-запрос)
   fetch(url, { method: 'HEAD' }).then(res => {
     const size = res.headers.get('content-length');
     if (size) {
@@ -258,7 +255,7 @@ function showFilePreviewModal(url, fileName) {
       document.getElementById('fileContent').textContent = text;
     })
     .catch(() => {
-      document.getElementById('fileContent').textContent = 'Ошибка при загрузке содержимого файла.';
+      document.getElementById('fileContent').textContent = 'Error when uploading file contents.';
     });
 
   document.getElementById('filePreviewModal').addEventListener('hidden.bs.modal', () => {
@@ -334,7 +331,6 @@ if (isImageUrl(url)) {
   }
 
 
-//site
 function createSitePreviewBlock(url) {
   if (sitePreviewCache.has(url)) {
     return sitePreviewCache.get(url);
@@ -348,19 +344,19 @@ function createSitePreviewBlock(url) {
   container.style.color = '#ffffff';
   container.style.borderColor = '#444';
 
-  container.innerHTML = `<div class="spinner-border spinner-border-sm" role="status"></div> <span>Загрузка...</span>`;
+  container.innerHTML = `<div class="spinner-border spinner-border-sm" role="status"></div> <span>Loading...</span>`;
 
   async function getSiteMetaData(inputUrl) {
     let siteUrl = inputUrl;
 
 const proxyList = [
   'https://api.allorigins.win/raw?url=',
-  'https://corsproxy.io/?', // работает с URL без кодировки
+  'https://corsproxy.io/?', 
 ];
 
 async function fetchHTML(targetUrl) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 15000); // 15 секунд
+  const timeout = setTimeout(() => controller.abort(), 15000); 
 
   for (const proxy of proxyList) {
     try {
@@ -368,27 +364,27 @@ async function fetchHTML(targetUrl) {
       const response = await fetch(proxy + encodedUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', // некоторые сайты требуют
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', 
         }
       });
 
       clearTimeout(timeout);
 
       if (!response.ok) {
-        console.warn(`Прокси ${proxy} вернул статус ${response.status}`);
+        console.warn(`Proxy ${proxy} returned the status ${response.status}`);
         continue;
       }
 
       const html = await response.text();
       if (html.length < 50) {
-        console.warn(`Получен подозрительно короткий HTML с ${proxy}`);
+        console.warn(`Suspiciously short HTML was received with ${proxy}`);
         continue;
       }
 
       return html;
 
     } catch (err) {
-      console.warn(`Ошибка при попытке через ${proxy}:`, err.message);
+      console.warn(`Error when trying via ${proxy}:`, err.message);
       continue;
     }
   }
@@ -398,7 +394,7 @@ async function fetchHTML(targetUrl) {
 
     function extractMetadata(html, baseURL) {
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      const title = doc.querySelector('title')?.innerText || 'Без названия';
+      const title = doc.querySelector('title')?.innerText || 'Untitled';
       const desc = doc.querySelector('meta[name="description"]')?.content ||
                    doc.querySelector('meta[property="og:description"]')?.content || '';
       const icon = doc.querySelector('link[rel~="icon"]')?.href ||
@@ -416,11 +412,11 @@ async function fetchHTML(targetUrl) {
         html = await fetchHTML(siteUrl);
         siteUrl = domain;
       } catch (e) {
-        return { error: 'Невозможно получить доступ' };
+        return { error: 'It is impossible to gain access' };
       }
     }
 
-    if (!html) return { error: 'Не удалось получить данные ни с URL, ни с домена' };
+    if (!html) return { error: 'Data could not be retrieved from either the URL or the domain' };
 
     return extractMetadata(html, new URL(siteUrl).origin);
   }
@@ -475,19 +471,11 @@ async function fetchHTML(targetUrl) {
       } catch {
         domainText = url;
       }
-      container.innerHTML = `Ошибка загрузки предварительного просмотра: ${domainText}`;
+      container.innerHTML = `Preview loading error:${domainText}`;
     });
 	container.setAttribute('type', 'site');
   return container;
 }
-
-// 
-
-
-
-
-
-
 
 function showImageModal(url) {
   const modalHtml = `
@@ -499,7 +487,6 @@ function showImageModal(url) {
           </div>
           <div class="position-absolute top-0 end-0 p-2">
             <a href="${url}" download class="btn btn-sm" style="background: none; border: none;">
-              <!-- Иконка с тенью и контуром для контраста -->
               <i class="bi bi-cloud-arrow-down-fill" style="font-size: 2rem; font-weight: bold; color: #ffffff; 
                   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7); padding: 5px;"></i>
             </a>
@@ -520,45 +507,34 @@ function showImageModal(url) {
 function normalizeUrlForRawAccess(url) {
   try {
     const parsed = new URL(url);
-
-    // GitHub
     if (parsed.hostname === 'github.com') {
       if (parsed.pathname.startsWith('/')) {
-        // Проверка на наличие /blob/ в пути
         return url
           .replace('https://github.com/', 'https://raw.githubusercontent.com/')
           .replace('/blob/', '/');
       }
     }
-
-    // GitLab
     if (parsed.hostname === 'gitlab.com') {
       if (parsed.pathname.includes('/-/blob/')) {
         return url.replace('/-/blob/', '/-/raw/');
       }
     }
-
-    // Bitbucket
     if (parsed.hostname === 'bitbucket.org') {
       if (parsed.pathname.includes('/src/')) {
         return url.replace('/src/', '/raw/');
       }
     }
-
-    // Azure Repos
     if (parsed.hostname === 'dev.azure.com') {
       if (parsed.pathname.includes('/_git/')) {
         return url.replace('/_git/', '/_apis/git/repositories/');
       }
     }
-
-    // SourceForge
     if (parsed.hostname === 'sourceforge.net') {
       if (parsed.pathname.includes('/svn/')) {
         return url.replace('/svn/', '/download/');
       }
     }
-    return url; // если не требует преобразования
+    return url; 
   } catch (err) {
     console.error('Invalid URL:', url, err);
     return url;
@@ -573,16 +549,16 @@ function showSiteDialog(url) {
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-body text-center">
-            <p>Переход на внешний ресурс. Пожалуйста, убедитесь в его безопасности перед переходом.</p>
+            <p>Switching to an external resource. Please make sure it is safe before crossing over.</p>
             <div id="sitePreview" class="my-3">
-              <div class="spinner-border spinner-border-sm" role="status"></div> Загрузка предпросмотра...
+              <div class="spinner-border spinner-border-sm" role="status"></div> Loading the preview...
             </div>
           </div>
           <div class="modal-footer">
             <a href="${url}" target="_blank" class="btn btn-danger">
-              <i class="bi bi-box-arrow-up-right"></i> Перейти
+              <i class="bi bi-box-arrow-up-right"></i> Go 
             </a>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           </div>
         </div>
       </div>
@@ -608,17 +584,16 @@ function showSiteDialog(url) {
 
     function extractMetadata(html, baseURL) {
       const doc = new DOMParser().parseFromString(html, 'text/html');
-      const title = doc.querySelector('title')?.innerText || 'Без названия';
+      const title = doc.querySelector('title')?.innerText || 'Untitled';
       const desc = doc.querySelector('meta[name="description"]')?.content ||
                    doc.querySelector('meta[property="og:description"]')?.content || '';
       const icon = doc.querySelector('link[rel~="icon"]')?.href ||
                    doc.querySelector('meta[property="og:image"]')?.content ||
                    '/favicon.ico';
 
-      const logoUrl = new URL(icon, baseURL).href;  // Логотип по домену
+      const logoUrl = new URL(icon, baseURL).href; 
       let imageUrl = doc.querySelector('meta[property="og:image"]')?.content || '';
 
-      // Если мета-тег для изображения не найден, ищем первое изображение на странице
       if (!imageUrl) {
         const firstImage = doc.querySelector('img');
         if (firstImage) {
@@ -632,54 +607,51 @@ function showSiteDialog(url) {
     let html = await fetchHTML(siteUrl);
     if (!html) {
       try {
-        const domain = new URL(siteUrl).origin;  // Получаем домен для логотипа
+        const domain = new URL(siteUrl).origin; 
         html = await fetchHTML(siteUrl);
-        siteUrl = domain;  // Используем домен для логотипа
+        siteUrl = domain; 
       } catch (e) {
-        return { error: 'Невозможно получить доступ' };
+        return { error: 'It is impossible to gain access' };
       }
     }
 
-    if (!html) return { error: 'Не удалось получить данные ни с URL, ни с домена' };
+    if (!html) return { error: 'Data could not be retrieved from either the URL or the domain' };
 
-    return extractMetadata(html, new URL(siteUrl).origin);  // Логотип по главному домену
+    return extractMetadata(html, new URL(siteUrl).origin); 
   }
 
   getSiteMetaData(url)
     .then(meta => {
       const previewContainer = document.getElementById('sitePreview');
-      previewContainer.innerHTML = ''; // Очищаем текст "Загрузка..."
+      previewContainer.innerHTML = ''; 
       
-      // Добавляем изображение предпросмотра (основное изображение сайта)
       const img = document.createElement('img');
-      img.src = meta.image || 'https://placehold.co/300'; // Используем fallback изображение
+      img.src = meta.image || 'https://placehold.co/300'; 
       img.className = 'img-fluid rounded';
       previewContainer.appendChild(img);
 
-      // Добавляем описание и название
       const title = document.createElement('h5');
       title.textContent = meta.title;
       previewContainer.appendChild(title);
 
       const description = document.createElement('p');
-      description.textContent = meta.description || 'Описание не найдено.';
+      description.textContent = meta.description || 'The description was not found.';
       previewContainer.appendChild(description);
 
-      // Добавляем ссылку на сайт внизу
       const link = document.createElement('a');
       link.href = url;
       link.target = '_blank';
       link.textContent = url;
-      link.style.fontWeight = 'bold';  // Жирный текст
-      link.style.fontSize = '1.2rem';  // Увеличиваем размер шрифта
-      link.style.color = '#e63946';  // Красный цвет для выделения
-      link.style.textDecoration = 'underline';  // Подчеркиваем ссылку
-      link.style.marginTop = '10px';  // Отступ сверху для ссылки
+      link.style.fontWeight = 'bold';  
+      link.style.fontSize = '1.2rem';  
+      link.style.color = '#e63946';  
+      link.style.textDecoration = 'underline'; 
+      link.style.marginTop = '10px';  
       previewContainer.appendChild(link);
     })
     .catch(() => {
       const previewContainer = document.getElementById('sitePreview');
-      previewContainer.innerHTML = 'Ошибка при загрузке предпросмотра.';
+      previewContainer.innerHTML = 'Error loading the preview.';
     });
 
   document.getElementById('siteModal').addEventListener('hidden.bs.modal', () => {
