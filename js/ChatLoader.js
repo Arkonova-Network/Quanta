@@ -5,18 +5,16 @@ import { goToChat } from '/gh/Arkonova-Network/Quanta/js/QuantaHub.js';
 document.addEventListener('DOMContentLoaded', function () {
     console.log("connecting to server");
 
-    const socket = io({
-        maxHttpBufferSize: 10 * 1024 * 1024
-    });
+    const socket = io({maxHttpBufferSize: 10 * 1024 * 1024});
 
     console.log("connect to server");
 
-    const chatList = document.getElementById('chatList'); // Убедись, что элемент существует
-    const renderedChats = new Set(); // Храним ID уже отрисованных чатов
+    const chatList = document.getElementById('chatList'); 
+    const renderedChats = new Set();
 
     function renderChats(chats) {
         const noChatsMessage = document.getElementById('noChatsMessage');
-        noChatsMessage.innerHTML = ''; // Очистка
+        noChatsMessage.innerHTML = ''; 
 
         if (chats.length === 0) {
             noChatsMessage.style.display = 'block';
@@ -24,12 +22,10 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        noChatsMessage.style.display = 'none'; // Прячем, если чаты есть
+        noChatsMessage.style.display = 'none'; 
 
         chats.forEach(chat => {
-            if (renderedChats.has(chat.id)) {
-                return; // Пропустить, если уже отрисован
-            }
+            if (renderedChats.has(chat.id)) {return;}
 
             const chatDiv = document.createElement('div');
             chatDiv.className = 'card p-2 d-flex flex-row align-items-center cursor-pointer user-button';
@@ -83,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
             chatDiv.appendChild(nameDiv);
             chatList.appendChild(chatDiv);
 
-            renderedChats.add(chat.id); // Запоминаем, что этот чат уже отрисован
+            renderedChats.add(chat.id); 
         });
     }
 
