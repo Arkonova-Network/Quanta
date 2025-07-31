@@ -1,3 +1,6 @@
+// CryptoUtil version 0.0.5
+console.log("CryptoUtil version 0.0.5");
+
 export async function restoreSymmetricKey(chatId, socket) {
     return new Promise((resolve, reject) => {
         socket.emit('private:join:get_public_keys', { chat_id: chatId });
