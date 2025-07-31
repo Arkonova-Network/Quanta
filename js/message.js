@@ -11,7 +11,6 @@ function createMessageElement(message, meid) {
   const div = document.createElement('div');
   div.classList.add('message', message.sender_id == meid ? 'message-right' : 'message-left');
 
-  // Экранируем HTML перед вставкой
   const escapedContent = escapeHTML(message.content);
 
   div.innerHTML = `
