@@ -1,4 +1,3 @@
-
 const newChatButton = document.getElementById('newChatButton');
 const actionButtons = document.getElementById('actionButtons');
 const createGroupBtn = document.getElementById('createGroupBtn');
@@ -7,13 +6,11 @@ const createChannelBtn = document.getElementById('createChannelBtn');
 const createModal = new bootstrap.Modal(document.getElementById('createModal'));
 let createType = "";
 
-// Открытие/закрытие кнопок
 newChatButton.addEventListener('click', () => {
   actionButtons.classList.toggle('show');
   actionButtons.classList.toggle('disabled_show');
 });
 
-// Выбор создания
 createGroupBtn.addEventListener('click', () => {
   openCreateModal('group');
 });
@@ -24,7 +21,6 @@ createChannelBtn.addEventListener('click', () => {
   openCreateModal('channel');
 });
 
-// Настройка модального окна
 function openCreateModal(type) {
   createType = type;
   actionButtons.classList.remove('show');
@@ -42,10 +38,8 @@ function openCreateModal(type) {
   createModal.show();
 }
 
-// Инициализация сокета (если нужен)
 const socket = io();
 
-// Кнопка "Создать"
 document.getElementById('confirmCreateBtn').addEventListener('click', () => {
   const name = document.getElementById('nameInput').value.trim();
   const description = document.getElementById('descriptionInput').value.trim();
