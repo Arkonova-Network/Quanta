@@ -1,3 +1,5 @@
+// ChatLoader version 0.0.5
+console.log("ChatLoader version 0.0.5");
 import { goToChat } from '/gh/Arkonova-Network/Quanta/js/QuantaHub.js';
 
 document.addEventListener('DOMContentLoaded', function () {
