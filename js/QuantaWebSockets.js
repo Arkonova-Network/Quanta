@@ -19,13 +19,11 @@ export async function joinPrivateChat(chatId, socket) {
       console.log('Ответ private:joined', data);
 
       if (data.sink_p && data.sink_u) {
-        // Если ключи есть, сразу возвращаем данные
         console.log('good key')
         resolve(data);
       } else {
-        // В случае отсутствия одного или обоих ключей
               if (!data.sink_p || !data.sink_u) {
-           console.log('Нет симметричных ключей, генерируем новые');
+           console.log('There are no symmetric keys, so we are generating new ones.');
           try {
             await generateAndSendKeys(chatId, socket);
             socket.emit('private:join', { chat_id: chatId });
@@ -33,39 +31,38 @@ export async function joinPrivateChat(chatId, socket) {
               resolve(dataWithKeys);
             });
           } catch (error) {
-            console.error('Ошибка генерации новых ключей', error);
+            console.error('Error generating new keys', error);
             reject(error);
           }
         }
         if (!data.sink_p) {
-          console.log('Нет симметричного ключа для p, произвожу восстановление');
+          console.log('There is no symmetric key for p, restoring it.');
           try {
             await restoreSymmetricKey(chatId, socket);
             socket.emit('private:join', { chat_id: chatId });
           } catch (error) {
-            console.error('Ошибка восстановления ключа для p', error);
+            console.error('Key recovery error for p', error);
             reject(error);
           }
         }
 
         if (!data.sink_u) {
-          console.log('Нет симметричного ключа для u, произвожу восстановление');
+          console.log('There is no symmetric key for u, restoring it.');
           try {
             await restoreSymmetricKey(chatId, socket);
             socket.emit('private:join', { chat_id: chatId });
           } catch (error) {
-            console.error('Ошибка восстановления ключа для u', error);
+            console.error('Key recovery error for u', error);
             reject(error);
           }
         }
 
         if (!data.sink_p || !data.sink_u) {
-          // Перепроверяем после восстановления ключей
           socket.once('private:joined', (dataWithKeys) => {
             resolve(dataWithKeys);
           });
         } else {
-          console.log('Нет симметричных ключей, генерируем новые');
+          console.log('There are no symmetric keys, we are generating new ones.');
           try {
             await generateAndSendKeys(chatId, socket);
             socket.emit('private:join', { chat_id: chatId });
@@ -73,7 +70,7 @@ export async function joinPrivateChat(chatId, socket) {
               resolve(dataWithKeys);
             });
           } catch (error) {
-            console.error('Ошибка генерации новых ключей', error);
+            console.error('Error generating new keys', error);
             reject(error);
           }
         }
@@ -81,7 +78,7 @@ export async function joinPrivateChat(chatId, socket) {
     });
 
     socket.once('error', (err) => {
-      console.error('Ошибка присоединения к чату', err);
+      console.error('Error joining the chat', err);
       reject(err);
     });
   });
